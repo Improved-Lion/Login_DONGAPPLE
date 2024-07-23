@@ -120,12 +120,12 @@ const ErrorMessage = styled.p`
 const validationSchema = yup.object().shape({
   email: yup
     .string()
-    .email('유효한 이메일 주소를 입력해주세요.')
-    .required('이메일은 필수 입력 항목입니다.'),
+    .required('이메일은 필수 입력 항목입니다.')
+    .email('유효한 이메일 주소를 입력해주세요.'),
   password: yup
     .string()
-    .min(6, '비밀번호는 6자 이상입니다.')
-    .required('비밀번호는 필수 입력 항목입니다.'),
+    .required('비밀번호는 필수 입력 항목입니다.')
+    .min(6, '비밀번호는 6자 이상입니다.'),
 });
 
 // Component

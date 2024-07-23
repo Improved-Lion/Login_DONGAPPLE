@@ -1,14 +1,16 @@
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import {
+  createUserWithEmailAndPassword,
+  fetchSignInMethodsForEmail,
+} from 'firebase/auth';
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { auth } from './../firebaseConfig';
 import styled, { keyframes } from 'styled-components';
-import * as yup from 'yup'; // yu
+import * as yup from 'yup';
 
+// Styled Components
 const Container = styled.div`
   padding: 3.75rem 6.875rem;
   margin: auto;
-  // border: 0.0625rem solid black;
   border-radius: 1rem;
   box-shadow: 0 0 20px 5px rgba(71, 111, 243, 0.5);
   max-width: 30rem;
@@ -23,26 +25,15 @@ const Form = styled.form`
   flex-direction: column;
   gap: 1rem;
   width: 100%;
-  & input:focus ~ label {
-    color: #496bf3;
-  }
 `;
 
 const InputWrapper = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  position: relative;
-
-  &:focus-within label {
-    color: #496bf3;
-  }
 `;
 
 const StyledLabel = styled.label`
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
   color: #3e4654;
   font-size: 1rem;
   cursor: pointer;
@@ -53,10 +44,34 @@ const StyledInput = styled.input`
   border: 1px solid gray;
   border-radius: 4px;
   height: 3.75rem;
+  width: 100%;
+  box-sizing: border-box;
+
   &:focus {
     border: 1px solid #496bf3;
     box-shadow: 0 0 0 2px rgba(73, 107, 243, 0.9);
     outline: none;
+  }
+`;
+
+const InputWithButton = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  width: 100%;
+`;
+
+const StyledButton = styled.button`
+  padding: 0.5rem 1rem;
+  border: 1px solid gray;
+  border-radius: 4px;
+  background-color: #496bf3;
+  color: white;
+  cursor: pointer;
+  height: 3.75rem;
+  min-width: 6rem;
+  &:hover {
+    background-color: #2548d2;
   }
 `;
 
@@ -68,6 +83,7 @@ const StyledSubmit = styled.input`
   height: 3.75rem;
   background-color: #496bf3;
   color: #fff;
+  cursor: pointer;
 
   transition:
     background-color 0.2s ease,
@@ -97,23 +113,56 @@ const ErrorMessage = styled.p`
   animation: ${shake} 0.25s ease;
 `;
 
+// Validation Schema
 const validationSchema = yup.object().shape({
   email: yup
     .string()
-    .email('유효한 이메일 주소를 입력해주세요.')
-    .required('이메일은 필수 입력 항목입니다.'),
+    .required('이메일은 필수 입력 항목입니다.')
+    .email('유효한 이메일 주소를 입력해주세요.'),
   password: yup
     .string()
-    .min(6, '비밀번호는 6자 이상입니다.')
-    .required('비밀번호는 필수 입력 항목입니다.'),
+    .required('비밀번호는 필수 입력 항목입니다.')
+    .min(6, '비밀번호는 6자 이상입니다.'),
+  confirmPassword: yup
+    .string()
+    .oneOf(
+      [yup.ref('password'), undefined],
+      '비밀번호와 비밀번호 확인이 일치하지 않습니다.'
+    )
+    .required('비밀번호 확인은 필수 입력 항목입니다.'),
 });
 
+// Component
 const Signup: React.FC = () => {
   const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const [emailCheckError, setEmailCheckError] = useState<string>(''); // 이메일 중복 확인 오류
+
+  const handleEmailChecked = async () => {
+    // 이메일 형식 검증
+    try {
+      await yup.string().email().validate(email);
+      try {
+        console.log('이메일 정상');
+        const methods = await fetchSignInMethodsForEmail(auth, email);
+        if (methods.length > 0) {
+          setEmailCheckError('이미 사용 중인 이메일입니다.');
+          console.log('사용중');
+        } else {
+          setEmailCheckError('');
+          console.log('사용가능');
+        }
+      } catch (error) {
+        console.error('Error checking email:', error);
+        setEmailCheckError('이메일 중복 확인에 실패했습니다.');
+      }
+    } catch (validationError) {
+      setEmailCheckError('유효한 이메일 주소를 입력해주세요.');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,16 +171,8 @@ const Signup: React.FC = () => {
       // 유효성 검사
       await validationSchema.validate({ email, password, confirmPassword });
       // 비밀번호 일치 확인
-      if (password !== confirmPassword) {
-        throw new yup.ValidationError(
-          '비밀번호와 비밀번호 확인이 일치하지 않습니다.',
-          null,
-          'confirmPassword'
-        );
-      }
-
       await createUserWithEmailAndPassword(auth, email, password);
-      alert('회원가입성공');
+      alert('회원가입 성공');
     } catch (validationError) {
       if (validationError instanceof yup.ValidationError) {
         setError(validationError.message);
@@ -140,6 +181,7 @@ const Signup: React.FC = () => {
       }
     }
   };
+
   return (
     <>
       <h1>회원가입</h1>
@@ -148,20 +190,29 @@ const Signup: React.FC = () => {
           <InputWrapper>
             <StyledLabel>이름</StyledLabel>
             <StyledInput
-              type="string"
+              type="text"
               id="name"
               placeholder="이름을 입력해주세요"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
             />
           </InputWrapper>
           <InputWrapper>
             <StyledLabel>이메일</StyledLabel>
-            <StyledInput
-              type="email"
-              id="email"
-              placeholder="이메일을 입력해주세요"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+            <InputWithButton>
+              <StyledInput
+                type="email"
+                id="email"
+                placeholder="이메일을 입력해주세요"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <StyledButton type="button" onClick={handleEmailChecked}>
+                중복확인 <br /> (미완성)
+              </StyledButton>
+            </InputWithButton>
+            {/* 이메일 중복 확인 오류 메시지 */}
+            {emailCheckError && <ErrorMessage>{emailCheckError}</ErrorMessage>}
           </InputWrapper>
           <InputWrapper>
             <StyledLabel>비밀번호</StyledLabel>
@@ -172,18 +223,19 @@ const Signup: React.FC = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+            <StyledLabel htmlFor="confirmPassword">비밀번호 확인</StyledLabel>
             <StyledInput
               type="password"
               id="confirmPassword"
-              placeholder="비밀번호를 한번더 입력해주세요"
+              placeholder="비밀번호를 한번 더 입력해주세요"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
           </InputWrapper>
-          <StyledSubmit type="submit" value={'가입하기'} />
+          <StyledSubmit type="submit" value="가입하기" />
         </Form>
 
-        {error && <ErrorMessage key={error}>{error}</ErrorMessage>}
+        {error && <ErrorMessage>{error}</ErrorMessage>}
         <p>소셜아이디로 간편하게 로그인할 수 있습니다.</p>
         <StyledUl>
           <li>네이버로 로그인</li>
