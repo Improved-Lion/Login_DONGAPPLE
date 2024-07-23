@@ -1,6 +1,9 @@
-import React from 'react';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import styled from 'styled-components';
+import { auth } from './../firebaseConfig';
+import styled, { keyframes } from 'styled-components';
+import * as yup from 'yup'; // yu
 
 const Container = styled.div`
   padding: 3.75rem 6.875rem;
@@ -74,12 +77,74 @@ const StyledSubmit = styled.input`
   }
 `;
 
+const StyledUl = styled.ul`
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  justify-content: space-between;
+`;
+
+const shake = keyframes`
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  50% { transform: translateX(3px); }
+  75% { transform: translateX(-2px); }
+  100% { transform: translateX(0); }
+`;
+
+const ErrorMessage = styled.p`
+  color: red;
+  animation: ${shake} 0.25s ease;
+`;
+
+const validationSchema = yup.object().shape({
+  email: yup
+    .string()
+    .email('유효한 이메일 주소를 입력해주세요.')
+    .required('이메일은 필수 입력 항목입니다.'),
+  password: yup
+    .string()
+    .min(6, '비밀번호는 6자 이상입니다.')
+    .required('비밀번호는 필수 입력 항목입니다.'),
+});
+
 const Signup: React.FC = () => {
+  const [name, setName] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
+  const [error, setError] = useState<string>('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      // 유효성 검사
+      await validationSchema.validate({ email, password, confirmPassword });
+      // 비밀번호 일치 확인
+      if (password !== confirmPassword) {
+        throw new yup.ValidationError(
+          '비밀번호와 비밀번호 확인이 일치하지 않습니다.',
+          null,
+          'confirmPassword'
+        );
+      }
+
+      await createUserWithEmailAndPassword(auth, email, password);
+      alert('회원가입성공');
+    } catch (validationError) {
+      if (validationError instanceof yup.ValidationError) {
+        setError(validationError.message);
+      } else {
+        setError('회원가입에 실패했습니다. 이메일과 비밀번호를 확인해주세요.');
+      }
+    }
+  };
   return (
     <>
       <h1>회원가입</h1>
       <Container>
-        <Form>
+        <Form onSubmit={handleSubmit}>
           <InputWrapper>
             <StyledLabel>이름</StyledLabel>
             <StyledInput
@@ -94,6 +159,8 @@ const Signup: React.FC = () => {
               type="email"
               id="email"
               placeholder="이메일을 입력해주세요"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
           </InputWrapper>
           <InputWrapper>
@@ -101,31 +168,29 @@ const Signup: React.FC = () => {
             <StyledInput
               type="password"
               id="password"
-              placeholder="6글자 이상으 비밀번호를 입력해주세요"
+              placeholder="6글자 이상의 비밀번호를 입력해주세요"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
             <StyledInput
               type="password"
-              id="password"
+              id="confirmPassword"
               placeholder="비밀번호를 한번더 입력해주세요"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
             />
           </InputWrapper>
           <StyledSubmit type="submit" value={'가입하기'} />
         </Form>
-      </Container>
 
-      <nav>
-        <ul>
-          <li>
-            <Link to="/">Home</Link>
-          </li>
-          <li>
-            <Link to="/login">Login</Link>
-          </li>
-          <li>
-            <Link to="/forgot_password">Forgot Password</Link>
-          </li>
-        </ul>
-      </nav>
+        {error && <ErrorMessage key={error}>{error}</ErrorMessage>}
+        <p>소셜아이디로 간편하게 로그인할 수 있습니다.</p>
+        <StyledUl>
+          <li>네이버로 로그인</li>
+          <li>카카오로 로그인</li>
+          <li>구글로 로그인</li>
+        </StyledUl>
+      </Container>
     </>
   );
 };
