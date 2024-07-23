@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import { auth } from './../firebaseConfig';
 import styled, { keyframes } from 'styled-components';
 import * as yup from 'yup';
+import { useNavigate } from 'react-router-dom';
 
 // Styled Components
 const Container = styled.div`
@@ -141,6 +142,8 @@ const Signup: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [emailCheckError, setEmailCheckError] = useState<string>(''); // 이메일 중복 확인 오류
 
+  const navigate = useNavigate(); // useNavigate 훅을 컴포넌트 내부에서 호출
+
   const handleEmailChecked = async () => {
     // 이메일 형식 검증
     try {
@@ -170,9 +173,13 @@ const Signup: React.FC = () => {
     try {
       // 유효성 검사
       await validationSchema.validate({ email, password, confirmPassword });
-      // 비밀번호 일치 확인
+
+      // 회원가입 처리
       await createUserWithEmailAndPassword(auth, email, password);
+
+      // 회원가입 성공 시 로그인 페이지로 이동
       alert('회원가입 성공');
+      navigate('/login');
     } catch (validationError) {
       if (validationError instanceof yup.ValidationError) {
         setError(validationError.message);
@@ -248,3 +255,4 @@ const Signup: React.FC = () => {
 };
 
 export default Signup;
+``;

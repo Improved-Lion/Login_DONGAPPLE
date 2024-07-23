@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from './../firebaseConfig';
@@ -134,6 +134,8 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState<string>('');
   const [error, setError] = useState<string>('');
 
+  const navigate = useNavigate();
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -142,6 +144,7 @@ const Login: React.FC = () => {
       await validationSchema.validate({ email, password });
       await signInWithEmailAndPassword(auth, email, password);
       alert('로그인 성공');
+      navigate('/');
     } catch (validationError) {
       if (validationError instanceof yup.ValidationError) {
         setError(validationError.message);
