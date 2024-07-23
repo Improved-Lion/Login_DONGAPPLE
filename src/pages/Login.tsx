@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from './../firebaseConfig';
-import * as yup from 'yup';
+import * as yup from 'yup'; // yup 불러오기
 
 // Styled Components
 const Container = styled.div`
@@ -79,6 +79,15 @@ const StyledUl = styled.ul`
   justify-content: space-between;
 `;
 
+// 유효성 검사 스키마 생성
+const validationSchema = yup.object().shape({
+  email: yup
+    .string()
+    .email('유효한 이메일 주소를 입력해주세요.')
+    .required('이메일은 필수 입력 항목입니다.'),
+  password: yup.string().required('비밀번호는 필수 입력 항목입니다.'),
+});
+
 // Component
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -87,12 +96,18 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
 
+    // 입력값 검증
+    try {
+      await validationSchema.validate({ email, password });
+      await signInWithEmailAndPassword(auth, email, password);
       alert('로그인 성공');
-    } catch (error) {
-      setError('로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.');
+    } catch (validationError) {
+      if (validationError instanceof yup.ValidationError) {
+        setError(validationError.message);
+      } else {
+        setError('로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.');
+      }
     }
   };
 
