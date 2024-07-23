@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import styled, { css, keyframes } from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from './../firebaseConfig';
 import * as yup from 'yup'; // yup 불러오기
@@ -9,7 +9,8 @@ import * as yup from 'yup'; // yup 불러오기
 const Container = styled.div`
   padding: 3.75rem 6.875rem;
   margin: auto;
-  border: 0.0625rem solid black;
+  box-shadow: 0 0 20px 5px rgba(71, 111, 243, 0.5);
+  border-radius: 1rem;
   max-width: 30rem;
   display: flex;
   flex-direction: column;
@@ -22,18 +23,24 @@ const Form = styled.form`
   flex-direction: column;
   gap: 1rem;
   width: 100%;
-  & input:focus ~ label {
+`;
+
+const InputWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  position: relative;
+
+  &:focus-within label {
     color: #496bf3;
   }
 `;
 
 const StyledLabel = styled.label`
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
   color: #3e4654;
   font-size: 1rem;
   cursor: pointer;
+  transition: color 0.2s ease;
 `;
 
 const StyledInput = styled.input`
@@ -41,6 +48,7 @@ const StyledInput = styled.input`
   border: 1px solid gray;
   border-radius: 4px;
   height: 3.75rem;
+
   &:focus {
     border: 1px solid #496bf3;
     box-shadow: 0 0 0 2px rgba(73, 107, 243, 0.9);
@@ -144,27 +152,31 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div>
+    <>
       <h1>로그인</h1>
       <Container>
         <Form onSubmit={handleSubmit}>
-          <StyledLabel htmlFor="email">이메일</StyledLabel>
-          <StyledInput
-            type="email"
-            id="email"
-            placeholder="이메일을 입력해주세요"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          <InputWrapper>
+            <StyledLabel htmlFor="email">이메일</StyledLabel>
+            <StyledInput
+              type="email"
+              id="email"
+              placeholder="이메일을 입력해주세요"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </InputWrapper>
 
-          <StyledLabel htmlFor="password"> 비밀번호</StyledLabel>
-          <StyledInput
-            type="password"
-            id="password"
-            placeholder="비밀번호를 입력해주세요"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <InputWrapper>
+            <StyledLabel htmlFor="password">비밀번호</StyledLabel>
+            <StyledInput
+              type="password"
+              id="password"
+              placeholder="비밀번호를 입력해주세요"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </InputWrapper>
 
           <Link to="/forgot_password">비밀번호를 잊으셨나요?</Link>
           <StyledSubmit type="submit" value="로그인" />
@@ -180,7 +192,7 @@ const Login: React.FC = () => {
           <li>구글로 로그인</li>
         </StyledUl>
       </Container>
-    </div>
+    </>
   );
 };
 
