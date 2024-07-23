@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from './../firebaseConfig';
+import * as yup from 'yup';
 
-// Styled
+// Styled Components
 const Container = styled.div`
   padding: 3.75rem 6.875rem;
   margin: auto;
@@ -11,19 +14,20 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  align-items: center;
 `;
 
 const Form = styled.form`
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  width: 100%;
 `;
 
 const StyledLabel = styled.label`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-
   color: #3e4654;
   font-size: 1rem;
   cursor: pointer;
@@ -34,7 +38,6 @@ const StyledInput = styled.input`
   border: 1px solid gray;
   border-radius: 4px;
   height: 3.75rem;
-  // width: 100%;
 `;
 
 const StyledSubmit = styled.input`
@@ -75,36 +78,53 @@ const StyledUl = styled.ul`
   width: 100%;
   justify-content: space-between;
 `;
-// Script
 
-// MarkUp
-
+// Component
 const Login: React.FC = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+
+      alert('로그인 성공');
+    } catch (error) {
+      setError('로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.');
+    }
+  };
+
   return (
     <div>
       <h1>로그인</h1>
-
       <Container>
-        <Form>
+        <Form onSubmit={handleSubmit}>
           <StyledLabel htmlFor="email">이메일</StyledLabel>
           <StyledInput
             type="email"
             id="email"
             placeholder="이메일을 입력해주세요"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
 
           <StyledLabel htmlFor="password"> 비밀번호</StyledLabel>
-
           <StyledInput
             type="password"
             id="password"
-            placeholder="비밀번호을 입력해주세요"
+            placeholder="비밀번호를 입력해주세요"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
           />
 
           <Link to="/forgot_password">비밀번호를 잊으셨나요?</Link>
           <StyledSubmit type="submit" value="로그인" />
           <StyledLink to="/signup">회원가입</StyledLink>
         </Form>
+
+        {error && <p style={{ color: 'red' }}>{error}</p>}
 
         <p>소셜아이디로 간편하게 로그인할 수 있습니다.</p>
         <StyledUl>
