@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { css, keyframes } from 'styled-components';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from './../firebaseConfig';
 import * as yup from 'yup'; // yup 불러오기
@@ -22,6 +22,9 @@ const Form = styled.form`
   flex-direction: column;
   gap: 1rem;
   width: 100%;
+  & input:focus ~ label {
+    color: #496bf3;
+  }
 `;
 
 const StyledLabel = styled.label`
@@ -38,6 +41,11 @@ const StyledInput = styled.input`
   border: 1px solid gray;
   border-radius: 4px;
   height: 3.75rem;
+  &:focus {
+    border: 1px solid #496bf3;
+    box-shadow: 0 0 0 2px rgba(73, 107, 243, 0.9);
+    outline: none;
+  }
 `;
 
 const StyledSubmit = styled.input`
@@ -48,6 +56,10 @@ const StyledSubmit = styled.input`
   height: 3.75rem;
   background-color: #496bf3;
   color: #fff;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
   &:hover {
     background-color: #2548d2;
   }
@@ -65,6 +77,10 @@ const StyledLink = styled(Link)`
   height: 3.75rem;
   width: 100%;
   box-sizing: border-box;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
 
   &:hover {
     background-color: #2548d2;
@@ -79,20 +95,36 @@ const StyledUl = styled.ul`
   justify-content: space-between;
 `;
 
+const shake = keyframes`
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  50% { transform: translateX(3px); }
+  75% { transform: translateX(-2px); }
+  100% { transform: translateX(0); }
+`;
+
+const ErrorMessage = styled.p`
+  color: red;
+  animation: ${shake} 0.25s ease;
+`;
+
 // 유효성 검사 스키마 생성
 const validationSchema = yup.object().shape({
   email: yup
     .string()
     .email('유효한 이메일 주소를 입력해주세요.')
     .required('이메일은 필수 입력 항목입니다.'),
-  password: yup.string().required('비밀번호는 필수 입력 항목입니다.'),
+  password: yup
+    .string()
+    .min(6, '비밀번호는 6자 이상입니다.')
+    .required('비밀번호는 필수 입력 항목입니다.'),
 });
 
 // Component
 const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [error, setError] = useState<string>('');
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -139,7 +171,7 @@ const Login: React.FC = () => {
           <StyledLink to="/signup">회원가입</StyledLink>
         </Form>
 
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+        {error && <ErrorMessage key={error}>{error}</ErrorMessage>}
 
         <p>소셜아이디로 간편하게 로그인할 수 있습니다.</p>
         <StyledUl>
