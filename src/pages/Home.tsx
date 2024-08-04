@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { useAuth } from '../contexts/Auth';
-import { auth } from '../firebaseConfig';
 
 // 스타일드 컴포넌트 상단에 정의
 const Container = styled.div`
