@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { useAuth } from '../contexts/Auth';
+import { auth } from '../firebaseConfig';
 
 // 스타일드 컴포넌트 상단에 정의
 const Container = styled.div`
@@ -83,11 +84,11 @@ const Home: React.FC = () => {
 
   return (
     <Container>
-      <Title>메인페이지 입니다.</Title>
-      <Nav>
-        <List>
-          {user ? (
-            <>
+      {user ? (
+        <>
+          <Title> {user.displayName}님 안녕하세요.</Title>
+          <Nav>
+            <List>
               <ListItem>
                 <StyledLink to="/profile">프로필</StyledLink>
               </ListItem>
@@ -97,9 +98,14 @@ const Home: React.FC = () => {
                 </Button>
               </ListItem>
               {logoutError && <p style={{ color: 'red' }}>{logoutError}</p>}
-            </>
-          ) : (
-            <>
+            </List>
+          </Nav>
+        </>
+      ) : (
+        <>
+          <Title>메인페이지 입니다.</Title>
+          <Nav>
+            <List>
               <ListItem>
                 <StyledLink to="/login">로그인</StyledLink>
               </ListItem>
@@ -109,10 +115,10 @@ const Home: React.FC = () => {
               <ListItem>
                 <StyledLink to="/signup">회원가입</StyledLink>
               </ListItem>
-            </>
-          )}
-        </List>
-      </Nav>
+            </List>
+          </Nav>
+        </>
+      )}
     </Container>
   );
 };
