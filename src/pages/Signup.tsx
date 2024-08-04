@@ -1,6 +1,7 @@
 import {
   createUserWithEmailAndPassword,
   fetchSignInMethodsForEmail,
+  updateProfile,
 } from 'firebase/auth';
 import React, { useState } from 'react';
 import { auth } from './../firebaseConfig';
@@ -135,7 +136,7 @@ const validationSchema = yup.object().shape({
 
 // Component
 const Signup: React.FC = () => {
-  const [name, setName] = useState<string>('');
+  const [displayName, setDisplayName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
@@ -175,7 +176,15 @@ const Signup: React.FC = () => {
       await validationSchema.validate({ email, password, confirmPassword });
 
       // 회원가입 처리
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
+
+      // 사용자 프로필 업데이트
+      await updateProfile(user, { displayName: displayName });
 
       // 회원가입 성공 시 로그인 페이지로 이동
       alert('회원가입 성공');
@@ -200,8 +209,8 @@ const Signup: React.FC = () => {
               type="text"
               id="name"
               placeholder="이름을 입력해주세요"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
             />
           </InputWrapper>
           <InputWrapper>
