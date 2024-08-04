@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "module": "commonjs",
-    "jsx": "react", // 또는 "react-jsx" (React 17 이상)
+    "target": "es6",
+    "module": "es2020",
     "moduleResolution": "node",
+    "jsx": "react",
+    "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "strict": true
+    "forceConsistentCasingInFileNames": true
   }
 }

@@ -80,11 +80,16 @@ const Home: React.FC = () => {
       setIsLoggingOut(false);
     }
   };
-
+  const defaultProfileImage = `${import.meta.env.VITE_PUBLIC_URL}/img/default_image3.png`;
   return (
     <Container>
       {user ? (
         <>
+          <img
+            src={user.photoURL || defaultProfileImage}
+            alt="프로필이미지"
+            style={{ width: 100, height: 100, borderRadius: '50%' }}
+          />
           <Title> {user.displayName}님 안녕하세요.</Title>
           <Nav>
             <List>

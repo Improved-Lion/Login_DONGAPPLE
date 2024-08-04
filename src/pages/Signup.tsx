@@ -1,5 +1,6 @@
 import {
   createUserWithEmailAndPassword,
+  deleteUser,
   fetchSignInMethodsForEmail,
   updateProfile,
 } from 'firebase/auth';
@@ -8,6 +9,8 @@ import { auth } from './../firebaseConfig';
 import styled, { keyframes } from 'styled-components';
 import * as yup from 'yup';
 import { useNavigate } from 'react-router-dom';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+const storage = getStorage();
 
 // Styled Components
 const Container = styled.div`
@@ -142,6 +145,26 @@ const Signup: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [emailCheckError, setEmailCheckError] = useState<string>(''); // 이메일 중복 확인 오류
+  // 이미지 추가
+  const [communityImage, setCommunityImage] = useState<string>(
+    `${import.meta.env.VITE_PUBLIC_URL}/img/default_image3.png`
+  );
+
+  // 이미지 함수 __ 현재는 보안 문제가 있을수 있음.
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const storageRef = ref(storage, `images/${file.name}`);
+      try {
+        const snapshot = await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(snapshot.ref);
+        setCommunityImage(downloadURL);
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        setError('이미지 업로드에 실패했습니다.');
+      }
+    }
+  };
 
   const navigate = useNavigate(); // useNavigate 훅을 컴포넌트 내부에서 호출
 
@@ -184,7 +207,20 @@ const Signup: React.FC = () => {
       const user = userCredential.user;
 
       // 사용자 프로필 업데이트
-      await updateProfile(user, { displayName: displayName });
+      try {
+        await updateProfile(user, {
+          displayName: displayName,
+          photoURL: communityImage,
+        });
+      } catch (updateProfileError) {
+        console.error('Error updating profile:', updateProfileError);
+
+        // 프로필 업데이트 실패 시 사용자 계정 삭제
+        await deleteUser(user);
+
+        setError('회원가입에 실패했습니다. 프로필 업데이트에 실패했습니다.');
+        return; // 이후 코드 실행을 중단합니다.
+      }
 
       // 회원가입 성공 시 로그인 페이지로 이동
       alert('회원가입 성공');
@@ -197,12 +233,41 @@ const Signup: React.FC = () => {
       }
     }
   };
-
   return (
     <>
       <h1>회원가입</h1>
       <Container>
         <Form onSubmit={handleSubmit}>
+          <InputWrapper>
+            {communityImage &&
+            communityImage !==
+              `${import.meta.env.VITE_PUBLIC_URL}/img/default_image3.png` ? (
+              <img
+                src={communityImage}
+                alt="Preview"
+                style={{ width: 100, height: 100, borderRadius: '50%' }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: 100,
+                  height: 100,
+                  borderRadius: '50%',
+                  backgroundColor: '#d3d3d3', // 회색 배경
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#ffffff', // 흰색 텍스트
+                  fontSize: '14px',
+                  textAlign: 'center',
+                }}
+              >
+                이미지 없음
+              </div>
+            )}
+            <input type="file" accept="image/*" onChange={handleImageChange} />
+          </InputWrapper>
+
           <InputWrapper>
             <StyledLabel>이름</StyledLabel>
             <StyledInput
