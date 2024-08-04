@@ -238,7 +238,7 @@ const Signup: React.FC = () => {
       <h1>회원가입</h1>
       <Container>
         <Form onSubmit={handleSubmit}>
-          <InputWrapper>
+          <InputWrapper style={{ alignItems: 'center' }}>
             {communityImage &&
             communityImage !==
               `${import.meta.env.VITE_PUBLIC_URL}/img/default_image3.png` ? (
@@ -265,7 +265,12 @@ const Signup: React.FC = () => {
                 이미지 없음
               </div>
             )}
-            <input type="file" accept="image/*" onChange={handleImageChange} />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              style={{ width: '180px' }}
+            />
           </InputWrapper>
 
           <InputWrapper>
